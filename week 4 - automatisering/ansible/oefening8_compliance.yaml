@@ -1,0 +1,65 @@
+---
+# Oefening 8 - Compliance controleren
+#
+# Een compliance-playbook controleert of een toestel voldoet aan de
+# afgesproken veiligheidsregels. Er wordt niets gewijzigd: er wordt enkel
+# gemeld wat niet in orde is.
+#
+# Gecontroleerde regels:
+#   1. Telnet mag niet openstaan op de vty-lijnen
+#   2. SSH moet versie 2 zijn
+#   3. service password-encryption moet aanstaan
+#   4. er moet een login-banner (motd) ingesteld zijn
+#
+# Uitvoeren:
+#     ansible-playbook -i hosts oefening8_compliance.yaml
+
+- name: Compliance-controle op Cisco IOS
+  hosts: routers
+  gather_facts: no
+  connection: ansible.netcommon.network_cli
+
+  tasks:
+    - name: Configuratie van de vty-lijnen ophalen
+      cisco.ios.ios_command:
+        commands: show running-config | section line vty
+      register: vty_config
+
+    - name: Melden als Telnet openstaat
+      ansible.builtin.debug:
+        msg: "NIET CONFORM: Telnet staat open op de vty-lijnen"
+      when: "'telnet' in vty_config.stdout[0]"
+
+    - name: SSH-versie controleren
+      cisco.ios.ios_command:
+        commands: show ip ssh
+      register: ssh_status
+
+    - name: Melden als SSH geen versie 2 is
+      ansible.builtin.debug:
+        msg: "NIET CONFORM: SSH draait niet op versie 2"
+      when: "'version 2' not in ssh_status.stdout[0]"
+
+    - name: Running-config ophalen
+      cisco.ios.ios_command:
+        commands: show running-config
+      register: running
+
+    - name: Melden als wachtwoordversleuteling uitstaat
+      ansible.builtin.debug:
+        msg: "NIET CONFORM: service password-encryption staat niet aan"
+      when: "'service password-encryption' not in running.stdout[0]"
+
+    - name: Melden als er geen login-banner is
+      ansible.builtin.debug:
+        msg: "NIET CONFORM: er is geen banner motd ingesteld"
+      when: "'banner motd' not in running.stdout[0]"
+
+    - name: Samenvatting per toestel
+      ansible.builtin.debug:
+        msg:
+          - "Toestel: {{ inventory_hostname }}"
+          - "Telnet op vty: {{ 'OPEN - niet conform' if 'telnet' in vty_config.stdout[0] else 'dicht - conform' }}"
+          - "SSH versie 2: {{ 'ja - conform' if 'version 2' in ssh_status.stdout[0] else 'nee - niet conform' }}"
+          - "Password-encryption: {{ 'aan - conform' if 'service password-encryption' in running.stdout[0] else 'uit - niet conform' }}"
+          - "Login-banner: {{ 'aanwezig - conform' if 'banner motd' in running.stdout[0] else 'ontbreekt - niet conform' }}"

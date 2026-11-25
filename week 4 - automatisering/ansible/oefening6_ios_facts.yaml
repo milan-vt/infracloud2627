@@ -1,0 +1,54 @@
+---
+# Oefening 6 - Gegevens verzamelen met ios_facts
+#
+# Dit is het Ansible-equivalent van oefening 3: in plaats van zelf show-
+# commando's te parsen, laat je de module ios_facts dat doen. Je krijgt
+# meteen gestructureerde gegevens terug.
+#
+# Uitvoeren:
+#     ansible-playbook -i hosts oefening6_ios_facts.yaml
+
+- name: Gegevens verzamelen van IOS XE-toestellen
+  hosts: routers
+  gather_facts: no                      # geen Linux-facts, het is een router
+  connection: ansible.netcommon.network_cli
+
+  tasks:
+    - name: Hardware- en interfacegegevens ophalen
+      cisco.ios.ios_facts:
+        gather_subset:
+          - hardware
+          - interfaces
+      register: ios_facts
+
+    - name: Hostname tonen
+      ansible.builtin.debug:
+        var: ios_facts.ansible_facts.ansible_net_hostname
+
+    - name: Serienummer tonen
+      ansible.builtin.debug:
+        var: ios_facts.ansible_facts.ansible_net_serialnum
+
+    - name: Model en IOS-versie tonen
+      ansible.builtin.debug:
+        msg: >-
+          Model: {{ ios_facts.ansible_facts.ansible_net_model }} |
+          IOS: {{ ios_facts.ansible_facts.ansible_net_version }}
+
+    - name: Overzicht van de interfaces
+      ansible.builtin.debug:
+        var: ios_facts.ansible_facts.ansible_net_interfaces.keys() | list
+
+    - name: Map backups aanmaken
+      ansible.builtin.file:
+        path: backups
+        state: directory
+        mode: "0755"
+      delegate_to: localhost
+      run_once: yes
+
+    - name: Alle facts bewaren als JSON
+      ansible.builtin.copy:
+        content: "{{ ios_facts.ansible_facts | to_nice_json }}"
+        dest: "backups/{{ inventory_hostname }}-facts.json"
+      delegate_to: localhost

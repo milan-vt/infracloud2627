@@ -1,0 +1,94 @@
+---
+# Oefening 7 - Show-commando's uitvoeren met ios_command
+#
+# ios_command stuurt operationele commando's (show ...) naar het toestel,
+# vergelijkbaar met send_command() in Netmiko. Voor configuratiewijzigingen
+# gebruik je beter ios_config (zie oefening 9).
+#
+# Deel A: informatie ophalen en tonen.
+# Deel B: de running-config vergelijken met een baseline-bestand.
+#
+# Uitvoeren:
+#     ansible-playbook -i hosts oefening7_ios_command.yaml
+
+- name: Informatie ophalen met ios_command
+  hosts: routers
+  gather_facts: no
+  connection: ansible.netcommon.network_cli
+
+  vars:
+    baseline_pad: "baselines/{{ inventory_hostname }}-baseline.conf"
+
+  tasks:
+    # --- Deel A: show-commando's ------------------------------------
+    - name: Meerdere show-commando's uitvoeren
+      cisco.ios.ios_command:
+        commands:
+          - show ip interface brief
+          - show cdp neighbors
+          - show ip route
+      register: info
+
+    - name: Interfaces tonen
+      ansible.builtin.debug:
+        var: info.stdout_lines[0]
+
+    - name: CDP-buren tonen
+      ansible.builtin.debug:
+        var: info.stdout_lines[1]
+
+    - name: Routeringstabel tonen
+      ansible.builtin.debug:
+        var: info.stdout_lines[2]
+
+    # --- Deel B: vergelijken met een baseline -----------------------
+    - name: Running-config ophalen
+      cisco.ios.ios_command:
+        commands:
+          - show running-config
+      register: running
+
+    - name: Map baselines aanmaken
+      ansible.builtin.file:
+        path: baselines
+        state: directory
+        mode: "0755"
+      delegate_to: localhost
+      run_once: yes
+
+    - name: Nagaan of er al een baseline bestaat
+      ansible.builtin.stat:
+        path: "{{ baseline_pad }}"
+      register: baseline_bestand
+      delegate_to: localhost
+
+    - name: Eerste keer? Dan de huidige config als baseline bewaren
+      ansible.builtin.copy:
+        content: "{{ running.stdout[0] }}\n"
+        dest: "{{ baseline_pad }}"
+      delegate_to: localhost
+      when: not baseline_bestand.stat.exists
+
+    - name: Baseline inlezen
+      ansible.builtin.set_fact:
+        baseline_raw: "{{ lookup('file', baseline_pad) }}"
+      when: baseline_bestand.stat.exists
+
+    - name: Configuraties vergelijken
+      ansible.utils.fact_diff:
+        before: "{{ baseline_raw }}"
+        after: "{{ running.stdout[0] }}"
+        plugin:
+          vars:
+            skip_lines:
+              - "^Building configuration.*"
+              - "^Current configuration.*"
+              - "^!!.*"
+      register: diff_result
+      delegate_to: localhost
+      when: baseline_bestand.stat.exists
+
+    - name: Verschillen tonen
+      ansible.builtin.debug:
+        msg: "{{ diff_result.diff_lines | default(['geen verschillen gevonden']) }}"
+      when: baseline_bestand.stat.exists

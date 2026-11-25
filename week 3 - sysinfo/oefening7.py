@@ -1,7 +1,17 @@
 import ipaddress
+import os
 import re
+import sys
 from collections import Counter
- 
+
+# Zorgt dat oefening1, oefening2 en oefening4 gevonden worden, ook als je
+# dit script vanuit een andere map start.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd())
+
+from oefening1 import collect_system_info
+from oefening2 import filter_info
+from oefening4 import lees_csv
+
 DATASET = "sysinfo_groep.csv"
 MAC_PATROON = re.compile(r"^([0-9a-f]{2}:){5}[0-9a-f]{2}$")
  

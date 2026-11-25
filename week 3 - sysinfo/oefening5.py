@@ -1,6 +1,15 @@
+import os
+import sys
+
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
+
+# Zorgt dat oefening4.py gevonden wordt, ook als je dit script vanuit een
+# andere map start.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd())
+
+from oefening4 import KOLOMMEN, lees_csv
 
 XLSX_BESTAND = "sysinfo_computers.xlsx"
 

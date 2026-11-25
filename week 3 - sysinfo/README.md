@@ -1,5 +1,16 @@
 # Week 3 — System Information Scripting (vervolg)
 
+Elke opdracht staat in een apart script, `oefening1.py` tot `oefening7.py`.
+Dezelfde uitwerking in notebookvorm staat in [week_3.ipynb](week_3.ipynb).
+
+De scripts bouwen op elkaar verder en importeren uit elkaar, dus voer ze uit
+in volgorde. Naast de standaardbibliotheek heb je `psutil` nodig, en voor
+opdracht 5 ook `openpyxl`:
+
+```
+python -m pip install psutil openpyxl
+```
+
 ## Doelstellingen
 
 - Python-scripts voor systeeminformatie manipuleren.
@@ -15,7 +26,7 @@
 
 [oefening1.py](oefening1.py)
 
-- Voer het script `collect_sysinfo.py` uit.
+- Voer het script `collect_sysinfo.py` uit (in deze repository: `oefening1.py`).
 - Bekijk aandachtig de structuur van de dictionary `info`.
 - Identificeer welke keys en geneste keys relevante informatie bevatten, bijvoorbeeld CPU,
   RAM-geheugen, opslag, netwerkinterfaces, computernaam en model.

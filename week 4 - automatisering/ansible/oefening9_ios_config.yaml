@@ -1,0 +1,90 @@
+---
+# Oefening 9 - Configureren met ios_config
+#
+# Dit is het Ansible-equivalent van oefening 5. ios_config stuurt
+# configuratieregels naar het toestel, vergelijkbaar met
+# send_config_set() in Netmiko, maar declaratief: Ansible past enkel aan
+# wat nog niet klopt (idempotent). Draai je het playbook een tweede keer,
+# dan meldt het "ok" in plaats van "changed".
+#
+# Wat dit playbook doet:
+#   1. basisbeveiliging zetten (password-encryption + banner)
+#   2. een loopback-interface aanmaken
+#   3. controleren of alles effectief toegepast is
+#   4. de configuratie bewaren
+#
+# Eerst testen zonder te wijzigen (dry run):
+#     ansible-playbook -i hosts oefening9_ios_config.yaml --check --diff
+# Echt uitvoeren:
+#     ansible-playbook -i hosts oefening9_ios_config.yaml
+# Achteraf de loopback weer verwijderen:
+#     ansible-playbook -i hosts oefening9_ios_config.yaml --tags opruimen
+
+- name: Cisco IOS configureren met ios_config
+  hosts: routers
+  gather_facts: no
+  connection: ansible.netcommon.network_cli
+
+  vars:
+    loopback_naam: Loopback110
+    loopback_ip: 10.110.0.2
+    loopback_masker: 255.255.255.0
+
+  tasks:
+    - name: Basisbeveiliging instellen
+      cisco.ios.ios_config:
+        lines:
+          - service password-encryption
+          - "banner motd #Unauthorized access is prohibited#"
+      register: beveiliging
+
+    - name: Doorgestuurde commando's voor de beveiliging
+      ansible.builtin.debug:
+        var: beveiliging.commands | default([])
+
+    - name: Loopback-interface aanmaken
+      cisco.ios.ios_config:
+        lines:
+          - "ip address {{ loopback_ip }} {{ loopback_masker }}"
+          - "description Aangemaakt door Ansible"
+        parents: "interface {{ loopback_naam }}"
+      register: loopback
+
+    - name: Doorgestuurde commando's voor de loopback
+      ansible.builtin.debug:
+        var: loopback.commands | default([])
+
+    # --- verificatie -------------------------------------------------
+    - name: Loopback-interfaces opvragen
+      cisco.ios.ios_command:
+        commands: show ip interface brief | include Loopback
+      register: verificatie
+
+    - name: Loopback-interfaces tonen
+      ansible.builtin.debug:
+        var: verificatie.stdout_lines[0]
+
+    - name: Configuratie bewaren naar startup-config
+      cisco.ios.ios_config:
+        save_when: modified
+
+# ---------------------------------------------------------------------
+# Opruimen: enkel uitgevoerd met --tags opruimen
+# ---------------------------------------------------------------------
+- name: Loopback-interface opnieuw verwijderen
+  hosts: routers
+  gather_facts: no
+  connection: ansible.netcommon.network_cli
+  tags: [opruimen, never]
+
+  tasks:
+    - name: Loopback verwijderen
+      cisco.ios.ios_config:
+        lines:
+          - no interface Loopback110
+      register: opruimen
+      ignore_errors: yes          # doorgaan ook als de interface niet bestaat
+
+    - name: Resultaat tonen
+      ansible.builtin.debug:
+        var: opruimen

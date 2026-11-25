@@ -1,9 +1,15 @@
 # Voeg de CSV-bestanden van alle groepsleden samen tot één dataset.
-# Uitvoeren in je notebook met:  %run -i samenvoegen.py
-# (NA de cel van taak 4: gebruikt KOLOMMEN, SCHEIDINGSTEKEN, lees_csv en schrijf_csv)
+# Gebruikt KOLOMMEN, SCHEIDINGSTEKEN, lees_csv en schrijf_csv uit oefening 4.
 import csv
 import glob
 import os
+import sys
+
+# Zorgt dat oefening4.py gevonden wordt, ook als je dit script vanuit een
+# andere map start.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd())
+
+from oefening4 import KOLOMMEN, SCHEIDINGSTEKEN, lees_csv, schrijf_csv
 
 INVOERMAP = "groepsdata"                                 # gedeelde map met alle bestanden
 PATROON = os.path.join(INVOERMAP, "sysinfo_*.csv")       # afgesproken bestandsnaam

@@ -3,9 +3,16 @@ import os
 import platform
 import socket
 import subprocess
+import sys
 
 import psutil
 
+# Zorgt dat oefening1.py gevonden wordt, ook als je dit script vanuit een
+# andere map start. Python zoekt een eigen module enkel in de map van het
+# script of in de huidige werkmap.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd())
+
+from oefening1 import collect_system_info
 
 GIB = 1024 ** 3
 

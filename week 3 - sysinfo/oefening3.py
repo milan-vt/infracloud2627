@@ -1,4 +1,13 @@
 import json
+import os
+import sys
+
+# Zorgt dat oefening1.py en oefening2.py gevonden worden, ook als je dit
+# script vanuit een andere map start.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd())
+
+from oefening1 import collect_system_info
+from oefening2 import filter_info
 
 gefilterd = filter_info(collect_system_info())
 

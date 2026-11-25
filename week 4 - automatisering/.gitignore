@@ -1,0 +1,9 @@
+# Door de scripts gegenereerde bestanden horen niet in de repository
+output/
+ansible/backups/
+ansible/baselines/
+__pycache__/
+*.pyc
+
+# Lokale verbindingsgegevens
+.env
