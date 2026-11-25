@@ -20,19 +20,3 @@ print(show_interfaces)
 
 connection.disconnect()
 
-#hostname model en serieel nummer extracten
-hostname = "To be Extracted"
-
-model = "To be Extracted"
-
-serial = "To be Extracted"
-
-#resulaat afprinten
-print("Device Information")
-print("------------------")
-print(f"Hostname: {hostname}")
-print(f"Model: Cisco {model}")
-print(f"Serial Number: {serial}")
-
-# Disconnect
-connection.disconnect()

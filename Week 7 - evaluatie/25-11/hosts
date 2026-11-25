@@ -1,0 +1,13 @@
+# Inventaris: de routers uit de CML-topologie
+[routers]
+R1 ansible_host=10.10.20.171
+R2 ansible_host=10.10.20.172
+
+[routers:vars]
+ansible_network_os=cisco.ios.ios
+ansible_connection=ansible.netcommon.network_cli
+ansible_user=cisco
+ansible_password=cisco
+ansible_become=yes
+ansible_become_method=enable
+ansible_become_password=cisco

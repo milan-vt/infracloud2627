@@ -1,0 +1,46 @@
+---
+# Opdracht 12: configureer en verwijder een loopbackinterface met Ansible.
+#
+# Uitvoeren:
+#     ansible-playbook -i hosts oef12.yml
+
+- name: Configure and remove loopback interface
+  hosts: routers
+  gather_facts: no
+  connection: network_cli
+
+  tasks:
+
+    # --- aanmaken ----------------------------------------------------
+    - name: Add loopback interface
+      ios_config:
+        lines:
+          - interface Loopback110
+          - ip address 10.110.0.2 255.255.255.0
+
+    - name: Verify loopback interface
+      ios_command:
+        commands:
+          - show ip interface brief | include Loopback
+      register: result
+
+    - name: Display result
+      debug:
+        var: result.stdout_lines
+
+    # verwijderen 
+    - name: Remove loopback interface
+      ios_config:
+        lines:
+          - no interface Loopback110
+      ignore_errors: yes
+
+    - name: Verify loopback interfaces
+      ios_command:
+        commands:
+          - show ip interface brief | include Loopback
+      register: result
+
+    - name: Display result
+      debug:
+        var: result.stdout_lines
